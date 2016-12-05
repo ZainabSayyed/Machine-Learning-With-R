@@ -1,7 +1,7 @@
 #Step 2: Preparing and Exploring Data
 #Unzip file (million records)
 
-airlineOriginal <- read.csv("C:/Users/Lovelyn/Desktop/R/Project 1/1987.csv.bz2")
+airlineOriginal <- read.csv("C:/Users/zaina/Documents/DataVisulaization_MachineLearning/1987.csv.bz2")
 #Cleaning Data Set
 #Excluding features ("N/A", "Non-Variability","0") from Data Set
 airlineOriginal$Year<-NULL
@@ -97,7 +97,7 @@ airline$Correct<-ifelse(airline$ArrDelay !=airline$NewArrDelay,airline$Correct<-
 set.seed(890123)
 
 airlineth<-airline[1:1000,]
-#write.csv(airlineth, "C:/Users/Lovelyn/Desktop/R/Project 1/random1000.csv")
+write.csv(airlineth, "C:/Users/zaina/Documents/DataVisulaization_MachineLearning/random1000.csv")
 ind <- sample(2, nrow(airline), replace=TRUE, prob=c(0.01, 0.99))
 airlineth_test<-airline[ind==1,]
 View(airlineth_test)
