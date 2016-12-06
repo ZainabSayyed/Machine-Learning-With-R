@@ -103,3 +103,70 @@ airlineth_test<-airline[ind==1,]
 View(airlineth_test)
 View(airline)
 airlineth$Correct<-NULL
+
+## Step 2: Exploring and preparing the data ----
+# read in data and examine structure
+str(airline)
+set.seed(12345)
+airline$score<-ifelse(airline$ActualElapsedTime-airline$CRSElapsedTime >0,airline$score<- 0.8, 0.2)
+
+#View(airline)
+# divide into training and test data
+airline_train <- airline[1:965499, ]
+airline_test  <- airline[965500:1287333, ]
+
+
+## Step 3: Training a model on the data ----
+# begin by training a simple linear SVM
+library(kernlab)
+airline_classifier <- ksvm( ArrivedLate ~ DepTime+CRSDepTime+ActualElapsedTime+CRSElapsedTime+DepDelay+Distance, data = airline_train, kernel = "rbfdot")
+
+# look at basic information about the model
+airline_classifier
+
+## Step 4: Evaluating model performance ----
+# predictions on testing dataset
+
+airline_test<-na.omit(airline_test)
+airline_predictions <- predict(airline_classifier, airline_test)
+
+head(airline_predictions)
+
+n<-table( airline_test$ArrivedLate,airline_predictions)
+
+
+
+# look only at agreement vs. non-agreement
+# construct a vector of TRUE/FALSE indicating correct/incorrect predictions
+agreement <- airline_predictions == airline_test$ArrivedLate
+table(agreement)
+prop.table(table(agreement))
+
+
+
+## Step 5: Improving model performance ----
+set.seed(12345)
+airline_classifier_rbf <- ksvm( ArrivedLate ~ DepTime+CRSDepTime+ActualElapsedTime+CRSElapsedTime+DepDelay+Distance  , data = airline_train, kernel = "rbfdot")
+
+airline_predictions_rbf <- predict(airline_classifier_rbf, airline_test)
+agreement_rbf <- airline_predictions_rbf == airline_test$ArrivedLate
+table(agreement_rbf)
+prop.table(table(agreement_rbf))
+
+
+#ROCR Curve:
+library(e1071)
+
+x.svm <- svm(ArrivedLate ~ DepTime+CRSDepTime+ActualElapsedTime+CRSElapsedTime+DepDelay+Distance  , data = airline_train, cost=1, gamma=0.0625, probability = TRUE)
+x.svm.prob <- predict(x.svm, type="prob",data = airline_test, probability = TRUE)
+
+library(ROCR)
+#p <- predict(airline_classifier_rbf,launch_test)
+pr <- prediction(airline_test$score,airline_test$ArrivedLate)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+
